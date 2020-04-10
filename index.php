@@ -15,18 +15,6 @@ if ($version == 'testnet') {require_once($_SERVER['DOCUMENT_ROOT'] . 'config/con
 else {require_once(explode('public_html', $_SERVER['DOCUMENT_ROOT'])[0] . 'config/config.php');}
 require_once($_SERVER['DOCUMENT_ROOT'] . '/function.php');
 
-function getBlockByHash ($api2,$hash)
-{
-    $api = new MinterAPI($api2);
-    return $api->getTransaction($hash);
-}
-
-function TransactoinSendDebug ($api2,$transaction)
-{
-    $api = new MinterAPI($api2);
-    return $api->send($transaction);
-}
-
 $api_node = new MinterAPI($api2);
 
 $cript_mnemonic = $_SESSION['cript_mnemonic'];
@@ -113,18 +101,71 @@ MINTERCAT: $MINTERCAT <br>
 <br>
 ";
 $butt = false;
-
 echo "<form method='post'>";
-if ($MINTERCAT > 10) {echo "<input id='int' name='int' type='submit' value='10'>";$butt = true;}
-if ($MINTERCAT > 50) {echo "<input id='int' name='int' type='submit' value='50'>";$butt = true;}
-if ($MINTERCAT > 100) {echo "<input id='int' name='int' type='submit' value='100'>";$butt = true;}
-if ($MINTERCAT > 500) {echo "<input id='int' name='int' type='submit' value='500'>";$butt = true;}
-if ($MINTERCAT > 1000) {echo "<input id='int' name='int' type='submit' value='1000'>";$butt = true;}
-if ($MINTERCAT > 5000) {echo "<input id='int' name='int' type='submit' value='5000'>";$butt = true;}
-if ($butt) {echo "<br><input id='Exchange' name='Exchange' type='submit' value='Exchange'><br><br>";}
+if ($MINTERCAT > 10) {echo "<input id='int' name='int' type='submit' value='10'> ";$butt = true;}
+if ($MINTERCAT > 50) {echo "<input id='int' name='int' type='submit' value='50'> ";$butt = true;}
+if ($MINTERCAT > 100) {echo "<input id='int' name='int' type='submit' value='100'> ";$butt = true;}
+if ($MINTERCAT > 500) {echo "<input id='int' name='int' type='submit' value='500'> ";$butt = true;}
+if ($MINTERCAT > 1000) {echo "<input id='int' name='int' type='submit' value='1000'> ";$butt = true;}
+if ($MINTERCAT > 5000) {echo "<input id='int' name='int' type='submit' value='5000'> ";$butt = true;}
+$int = $_POST['int'];
+echo "<br>$int<br>";
+echo "<input id='int2' name='int2' type='hidden' value='$int'>";
+if ($butt) {echo "<input id='Exchange' name='Exchange' type='submit' value='Exchange'><br><br>";}
 echo "</form>";
-
-echo $int = $_POST['int'];
 //-------------------------------
 echo "</div><div class='cat_form'></div><br><br></center>";
 include('../footer.php');
+
+if (isset($_POST['Exchange']))
+	{
+		$api_node = new MinterAPI($api3);
+		$int = $_POST['int2'];
+		if (($test != 'testnet')and($MINTERCAT >= $int))
+			{
+				$tx = new MinterTx([
+					'nonce' => $api_node->getNonce($address),
+					'chainId' => MinterTx::MAINNET_CHAIN_ID,
+					'gasPrice' => 1,
+					'gasCoin' => 'MINTERCAT',
+					'type' => MinterMultiSendTx::TYPE,
+					'data' => [
+						'list' => [
+							[
+								'coin' => 'MINTERCAT',
+								'to' => 'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',
+								'value' => $int
+							]
+						]
+					],
+					'payload' => '',
+					'serviceData' => '',
+					'signatureType' => MinterTx::SIGNATURE_SINGLE_TYPE
+				]);
+				$transaction = $tx->sign($private_key);
+				$api_node->send($transaction);
+				sleep(6);
+				$tx = new MinterTx([
+					'nonce' => $api_node->getNonce('Mx836a597ef7e869058ecbcc124fae29cd3e2b4444'),
+					'chainId' => MinterTx::MAINNET_CHAIN_ID,
+					'gasPrice' => 1,
+					'gasCoin' => 'MINTERCAT',
+					'type' => MinterMultiSendTx::TYPE,
+					'data' => [
+						'list' => [
+							[
+								'coin' => 'GIFTCAT',
+								'to' => $address,
+								'value' => $int
+							]
+						]
+					],
+					'payload' => '',
+					'serviceData' => '',
+					'signatureType' => MinterTx::SIGNATURE_SINGLE_TYPE
+				]);
+				$transaction = $tx->sign($privat_key_mintercat);
+				$api_node->send($transaction);
+				header('Location: '.$site.'test'); exit;
+			}
+	}
