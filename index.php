@@ -32,14 +32,10 @@ $api_node = new MinterAPI($api2);
 $cript_mnemonic = $_SESSION['cript_mnemonic'];
 if ($cript_mnemonic != '') {
 $decript_text = openssl_decrypt($cript_mnemonic, $crypt_method, $crypt_key, $crypt_options, $crypt_iv);
-$decript = json_decode($decript_text,true);
+$decript = json_decode($decript_text);
 
-$address = $decript['address'];
-$private_key = $decript['private_key'];
-
-$db_cats = new dbCats();
-$db_rss = new RSS();
-$db_users = new Users();
+$address = $decript->address;
+$private_key = $decript->private_key;
 
 $nick = User::Address($address)->nick;
 
