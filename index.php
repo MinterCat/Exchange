@@ -119,53 +119,29 @@ include('../footer.php');
 
 if (isset($_POST['Exchange']))
 	{
-		$api_node = new MinterAPI($api3);
 		$int = $_POST['int2'];
-		if (($test != 'testnet')and($MINTERCAT >= $int))
+		if ($MINTERCAT >= $int)
 			{
-				$tx = new MinterTx([
-					'nonce' => $api_node->getNonce($address),
-					'chainId' => MinterTx::MAINNET_CHAIN_ID,
-					'gasPrice' => 1,
-					'gasCoin' => 'MINTERCAT',
-					'type' => MinterMultiSendTx::TYPE,
-					'data' => [
-						'list' => [
-							[
-								'coin' => 'MINTERCAT',
-								'to' => 'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',
-								'value' => $int
-							]
-						]
-					],
-					'payload' => '',
-					'serviceData' => '',
-					'signatureType' => MinterTx::SIGNATURE_SINGLE_TYPE
-				]);
-				$transaction = $tx->sign($private_key);
-				$api_node->send($transaction);
-				sleep(6);
-				$tx = new MinterTx([
-					'nonce' => $api_node->getNonce('Mx836a597ef7e869058ecbcc124fae29cd3e2b4444'),
-					'chainId' => MinterTx::MAINNET_CHAIN_ID,
-					'gasPrice' => 1,
-					'gasCoin' => 'MINTERCAT',
-					'type' => MinterMultiSendTx::TYPE,
-					'data' => [
-						'list' => [
-							[
-								'coin' => 'GIFTCAT',
-								'to' => $address,
-								'value' => $int
-							]
-						]
-					],
-					'payload' => '',
-					'serviceData' => '',
-					'signatureType' => MinterTx::SIGNATURE_SINGLE_TYPE
-				]);
-				$transaction = $tx->sign($privat_key_mintercat);
-				$api_node->send($transaction);
+				$tx_array = array(array(
+					'coin' => 'MINTERCAT',
+					'to' => 'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',
+					'value' => $int
+				));
+				$transaction = TransactionSend($api,$address,$privat_key,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
+				$code = $transaction->code;
+				if ($code == 0)
+					{
+						$tx_array = array(array(
+							'coin' => 'GIFTCAT',
+							'to' => $address,
+							'value' => $int
+						));
+						$transaction = TransactionSend($api,'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',$privat_key_mintercat,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
+					}
+				else
+					{
+						echo 'transaction error';
+					}
 				header('Location: '.$site.'test'); exit;
 			}
 	}
