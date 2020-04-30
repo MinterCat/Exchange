@@ -15,8 +15,6 @@ if ($version == 'testnet') {require_once($_SERVER['DOCUMENT_ROOT'] . 'config/con
 else {require_once(explode('public_html', $_SERVER['DOCUMENT_ROOT'])[0] . 'config/config.php');}
 require_once($_SERVER['DOCUMENT_ROOT'] . '/function.php');
 
-$api_node = new MinterAPI($api2);
-
 $cript_mnemonic = $_SESSION['cript_mnemonic'];
 if ($cript_mnemonic != '') {
 $decript_text = openssl_decrypt($cript_mnemonic, $crypt_method, $crypt_key, $crypt_options, $crypt_iv);
@@ -89,7 +87,7 @@ Balance: $balance $coin
 		";
 
 $GIFTCAT = CoinBalance($address, 'GIFTCAT');
-$MINTERCAT = CoinBalance($address, 'MINTERCAT');
+$MINTERCAT = $balance;
 
 echo "
 MINTERCAT -> GIFTCAT <br><br>
@@ -127,6 +125,7 @@ if (isset($_POST['Exchange']))
 					'to' => 'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',
 					'value' => $int
 				));
+				$api = 'https://api.minter.one';
 				$transaction = TransactionSend($api,$address,$privat_key,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
 				$code = $transaction->code;
 				if ($code == 0)
