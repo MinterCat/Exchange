@@ -43,15 +43,18 @@ function TransactionSend($api,$address,$private_key,$chainId,$gasCoin,$text,$tx_
 	$transaction = $tx->sign($private_key);
 	return $api->send($transaction)->result;
 }
+
+$DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'];
 //-----------------------
-$base = $_SERVER['DOCUMENT_ROOT'] . '/explorer/session.txt';
-include($_SERVER['DOCUMENT_ROOT'] . '/explorer/online.php');
+$base = $DOCUMENT_ROOT . '/explorer/session.txt';
+include($DOCUMENT_ROOT . '/explorer/online.php');
 //-----------------------
 $session_language = $_SESSION['session_language'];
-$version = explode('public_html', $_SERVER['DOCUMENT_ROOT'])[1];
-if ($version == 'testnet') {require_once($_SERVER['DOCUMENT_ROOT'] . 'config/config.php');}
-else {require_once(explode('public_html', $_SERVER['DOCUMENT_ROOT'])[0] . 'config/config.php');}
-require_once($_SERVER['DOCUMENT_ROOT'] . '/function.php');
+
+$version = explode('public_html', $DOCUMENT_ROOT)[1];
+if ($version == 'testnet') {require_once($DOCUMENT_ROOT . 'config/config.php');}
+else {require_once(explode('public_html', $DOCUMENT_ROOT)[0] . 'config/config.php');}
+require_once($DOCUMENT_ROOT . '/function.php');
 
 $cript_mnemonic = $_SESSION['cript_mnemonic'];
 if ($cript_mnemonic != '') {
@@ -147,7 +150,7 @@ echo "
 </form>";
 //-------------------------------
 echo "</div><div class='cat_form'></div><br><br></center>";
-//include('../footer.php');
+include('../footer.php');
 
 if (isset($_POST['Exchange']))
 	{
@@ -171,12 +174,11 @@ if (isset($_POST['Exchange']))
 							'value' => $int
 						));
 						$transaction = TransactionSend($api,'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',$privat_key_mintercat,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
-						header('Location: '.$site.'test');
-						exit;
-					}
-				else
-					{
-						echo 'transaction error';
+						$code = $transaction->code;
+						if ($code == 0)
+							{
+								header_lol($site.'exchange');
+							}
 					}
 			}
 	}
