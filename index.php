@@ -5,6 +5,44 @@ use Minter\MinterAPI;
 use Minter\SDK\MinterTx;
 use Minter\SDK\MinterCoins\MinterMultiSendTx;
 
+function TransactionSend($api,$address,$private_key,$chainId,$gasCoin,$text,$tx_array)
+{
+	$api = new MinterAPI($api);
+	if ($chainId == 1) 
+		{
+			$tx = new MinterTx([
+				'nonce' => $api->getNonce($address),
+				'chainId' => MinterTx::MAINNET_CHAIN_ID,
+				'gasPrice' => 1,
+				'gasCoin' => $gasCoin,
+				'type' => MinterMultiSendTx::TYPE,
+				'data' => [
+					'list' => $tx_array
+				],
+				'payload' => $text,
+				'serviceData' => '',
+				'signatureType' => MinterTx::SIGNATURE_SINGLE_TYPE
+			]);
+		} 
+	else 
+		{
+			$tx = new MinterTx([
+				'nonce' => $api->getNonce($address),
+				'chainId' => MinterTx::TESTNET_CHAIN_ID,
+				'gasPrice' => 1,
+				'gasCoin' => $gasCoin,
+				'type' => MinterMultiSendTx::TYPE,
+				'data' => [
+					'list' => $tx_array
+				],
+				'payload' => $text,
+				'serviceData' => '',
+				'signatureType' => MinterTx::SIGNATURE_SINGLE_TYPE
+			]);
+		}
+	$transaction = $tx->sign($private_key);
+	return $api->send($transaction)->result;
+}
 //-----------------------
 $base = $_SERVER['DOCUMENT_ROOT'] . '/explorer/session.txt';
 include($_SERVER['DOCUMENT_ROOT'] . '/explorer/online.php');
@@ -31,7 +69,8 @@ if ($check_language != '') {$Language = Language($check_language);}
 elseif ($session_language != '') {$Language = Language($session_language);} 
 else {$Language = Language('English');}
 
-$balance = CoinBalance($address, 'MINTERCAT');
+$GIFTCAT = CoinBalance($address, 'GIFTCAT');
+$MINTERCAT = CoinBalance($address, 'MINTERCAT');
 //-------------------------------
 $url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 }else{header('Location: '.$site.'exit.php'); exit;}
@@ -81,43 +120,39 @@ echo "$menu
 			</div>
 		</div>
 	</div>
-<center><blockquote>
-Balance: $balance $coin
-</blockquote>
-		";
-
-$GIFTCAT = CoinBalance($address, 'GIFTCAT');
-$MINTERCAT = $balance;
-
-echo "
-MINTERCAT -> GIFTCAT <br><br>
-";
-
-echo "
+<center>
+<br>
+<h3>MINTERCAT -> GIFTCAT</h3>
+<blockquote>
 GIFTCAT: $GIFTCAT <br>
 MINTERCAT: $MINTERCAT <br>
+</blockquote>
+<br>
 <br>
 ";
 $butt = false;
-echo "<form method='post'>";
-if ($MINTERCAT > 10) {echo "<input id='int' name='int' type='submit' value='10'> ";$butt = true;}
-if ($MINTERCAT > 50) {echo "<input id='int' name='int' type='submit' value='50'> ";$butt = true;}
-if ($MINTERCAT > 100) {echo "<input id='int' name='int' type='submit' value='100'> ";$butt = true;}
-if ($MINTERCAT > 500) {echo "<input id='int' name='int' type='submit' value='500'> ";$butt = true;}
-if ($MINTERCAT > 1000) {echo "<input id='int' name='int' type='submit' value='1000'> ";$butt = true;}
-if ($MINTERCAT > 5000) {echo "<input id='int' name='int' type='submit' value='5000'> ";$butt = true;}
-$int = $_POST['int'];
-echo "<br>$int<br>";
-echo "<input id='int2' name='int2' type='hidden' value='$int'>";
-if ($butt) {echo "<input id='Exchange' name='Exchange' type='submit' value='Exchange'><br><br>";}
-echo "</form>";
+echo "<form method='POST'>
+<select size='auto' multiple name='int'>
+<option disabled>minimum 10 GIFTCAT</option>";
+if ($MINTERCAT > 10) {echo "<option value='10'>10</option>";}
+if ($MINTERCAT > 50) {echo "<option value='50'>50</option>";}
+if ($MINTERCAT > 100) {echo "<option value='100'>100</option>";}
+if ($MINTERCAT > 500) {echo "<option value='500'>500</option>";}
+if ($MINTERCAT > 1000) {echo "<option value='1000'>1000</option>";}
+if ($MINTERCAT > 5000) {echo "<option value='5000'>5000</option>";}
+echo "
+</select>
+<br><br>
+<input id='Exchange' name='Exchange' type='submit' value='Exchange'>
+</form>";
 //-------------------------------
 echo "</div><div class='cat_form'></div><br><br></center>";
-include('../footer.php');
+//include('../footer.php');
 
 if (isset($_POST['Exchange']))
 	{
-		$int = $_POST['int2'];
+		$int = $_POST['int'];
+		
 		if ($MINTERCAT >= $int)
 			{
 				$tx_array = array(array(
@@ -125,8 +160,8 @@ if (isset($_POST['Exchange']))
 					'to' => 'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',
 					'value' => $int
 				));
-				$api = 'https://api.minter.one';
-				$transaction = TransactionSend($api,$address,$privat_key,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
+				$api = 'https://api.minter.one/';
+				$transaction = TransactionSend($api,$address,$private_key,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
 				$code = $transaction->code;
 				if ($code == 0)
 					{
@@ -136,11 +171,12 @@ if (isset($_POST['Exchange']))
 							'value' => $int
 						));
 						$transaction = TransactionSend($api,'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444',$privat_key_mintercat,$chainId = 1,$gasCoin = 'MINTERCAT',$text = '',$tx_array);
+						header('Location: '.$site.'test');
+						exit;
 					}
 				else
 					{
 						echo 'transaction error';
 					}
-				header('Location: '.$site.'test'); exit;
 			}
 	}
