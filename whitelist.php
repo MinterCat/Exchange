@@ -62,6 +62,7 @@ $whitelist = array(
 'GENESIS',
 'KARMA',
 'BIT',
+'ROUBLE',
 'LIKE',
 'TAXFREE',
 'BANANA',
@@ -71,5 +72,6 @@ $whitelist = array(
 'MINTEGO',
 'MINTERWAY',
 'JSONCOIN',
-'REWARD'
+'REWARD',
+'TRADERS'
 );
