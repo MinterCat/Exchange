@@ -2,10 +2,19 @@
 include('estimate.php');
 include('whitelist.php');
 
+$DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'];
+require_once(explode('public_html', $DOCUMENT_ROOT)[0] . 'config/config.php');
+require_once($DOCUMENT_ROOT . '/function.php');
+
+$push='';
 $address = 'Mx836a597ef7e869058ecbcc124fae29cd3e2b4444';
 $sumbip = 0; $stabledollar = 0;
-$price = json_decode(file_get_contents('https://api.bip.dev/api/price'))->data->sell_price*0.0001;
-echo '1 BIP = <a href="https://bip.dev/" target="_blank">$' . $price . '</a><br><br>';
+
+$price_json = json_decode(file_get_contents('https://api.coingecko.com/api/v3/coins/bip'));
+$price = $price_json->market_data->current_price->usd;
+$price_change_percentage_24h = '('. number_format($price_json->market_data->price_change_percentage_24h,1, '.', '') . '%)';
+
+echo '<p> 1 BIP = <a href="https://www.coingecko.com/en/coins/bip" target="_blank" style="text-decoration: none; color: black;">$' . $price . ' '. $price_change_percentage_24h .'</a>';
 $url = 'https://explorer-api.minter.network/api/v1/addresses/' . $address;
 $data = file_get_contents($url);
 $json = json_decode($data)->data->balances;
@@ -14,47 +23,100 @@ $daily_json = file_get_contents('https://www.cbr-xml-daily.ru/daily_json.js');
 $daily_json = json_decode($daily_json);
 $ROUBLE = $daily_json->Valute->USD->Value;
 
+echo '<br>1 RUB = $' . $ROUBLE . '</a></p>';
+
+$url = 'https://explorer-api.minter.network/api/v1/addresses/' . $address . '/delegations';
+$delegations = json_decode(file_get_contents($url))->data;
+
+echo "
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<meta http-equiv='X-UA-Compatible' content='ie=edge'>
+<link rel='shortcut icon' href='".$site."static/img/icons/Cats.webp'>
+<link rel='stylesheet' href='".$site."static/css/styles.min.css'>
+<link rel='stylesheet' href='".$site."static/css/style_header.css'>
+<link rel='stylesheet' href='".$site."static/css/style_menu.css'>
+<link rel='stylesheet' href='".$site."static/css/pagination.css'>
+<link rel='stylesheet' href='".$site."static/css/lk.css'>
+<link rel='stylesheet' href='".$site."static/css/social.css'>
+<script type='text/javascript' src='https://mintercat.com/static/js/jquery-3.4.1.min.js'></script>
+<link rel='stylesheet' href='".$site."static/css/normalize.css'>
+
+<div class='cat_content_none'>
+<div class='explorer_content' style='width: 98%; text-align: left; margin: 0;'>
+
+<div class='explorer_block' style='width: 100%;'>
+<div class='explorer_block_header'><center><a href='https://explorer.minter.network/address/Mx836a597ef7e869058ecbcc124fae29cd3e2b4444' target='_blank' style='text-decoration: none; color: black;'>COINS</a></center></div>
+<div class='explorer_block_content' style='overflow: auto;'>
+";
+$data = [];
+foreach ($delegations as $value => $coins) {
+$coin = $coins->coin;
+$value = $coins->value;
+$bip_value = $coins->bip_value;
+
+if (array_key_exists($coin, $data)) {
+        $data[$value] += $value;
+    }
+    else {
+        $data[$coin] = $value;
+    }
+
+}
+
 foreach ($json as $value => $coins) {
 	$coin = $coins->coin;
 	if (array_search($coin, $whitelist))
 		{
 			if ($coin == 'BIT')
 				{
+					echo '<div class="block">
+							<span class="hover">⚛️</span>
+							<span class="hidden">StableCoin</span>';
 					echo $coin . ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
-					echo ' | $'.$amount.'<br>';
+					echo ' | $'.$amount.'</div>';
 					$stabledollar += $amount;
+					$push .= "['".$coin."', ".$amount."],";
 				}
 			elseif ($coin == 'ROUBLE')
 				{
+					echo '<div class="block">
+							<span class="hover">⚛️</span>
+							<span class="hidden">StableCoin</span>';
 					echo $coin . ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
-					echo ' | USD/RUB  '.$ROUBLE.' | $'. $amount / $ROUBLE .'<br>';
+					echo ' | USD/RUB  '.$ROUBLE.' | $'. $amount / $ROUBLE .'</div>';
 					$stabledollar += $amount / $ROUBLE;
+					$push .= "['".$coin."', ".$amount / $ROUBLE."],";
 				}
 			else
 				{
+					echo '✅';
 					echo $coin . ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
 					$estimate = estimate($coin);
 					$sum = $estimate*$amount;
 					echo ' | Estimate: ' . $estimate .' BIP | ' . $sum .' BIP<br>';
 					$sumbip += $sum;
+					$push .= "['".$coin."', ".$sum * $price."],";
 				}
 		}
 	else
 		{
 			if ($coin == 'BIP')
 				{
+					echo '✅';
 					echo $coin;
 					echo ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
 					echo '<br>';
 					$sumbip += $amount;
+					$push .= "['".$coin."', ".$amount * $price."],";
 				}
 			else
 				{
-					echo '❗️';
+					echo '❌';
 					echo $coin;
 					echo ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
@@ -63,18 +125,48 @@ foreach ($json as $value => $coins) {
 				}
 		}
 }
-echo "<br>Баланс BIP: $sumbip<br>Делегировано BIP: ";
+$Uncertain = 0;
 $url = 'https://explorer-api.minter.network/api/v1/addresses/' . $address . '/delegations';
 $data = file_get_contents($url);
-echo $json = json_decode($data)->meta->additional->total_delegated_bip_value;
+$json = json_decode($data)->meta->additional->total_delegated_bip_value;
 $sumbip += $json;
 $dollar = ($sumbip * $price) + $stabledollar;
-
-echo '<br><br>';
 $freefloat = pow(10,9) - $GIFTCAT;
+$priceDollar = $dollar/((pow(10,9)*2)-pow(10,9)-$freefloat)*100*500;
 echo "
-GIFTCAT<br>
------<br>
+</div></div></div>
+<div class='explorer_block' style='float: left;'>
+<div class='explorer_block_header'><center>RESERVE</center></div>
+<div class='explorer_block_content'>
+
+<script src='https://www.google.com/jsapi'></script>
+  <script>
+   google.load('visualization', '1', {packages:['corechart']});
+   google.setOnLoadCallback(drawChart);
+   function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+     ['COIN', 'Amount'],
+     $push
+	 ['Uncertain',    $Uncertain]
+    ]);
+    var options = {
+     title: 'Coins',
+     is3D: true,
+     pieResidueSliceLabel: 'Uncertain'
+    };
+    var chart = new google.visualization.PieChart(document.getElementById('coins'));
+     chart.draw(data, options);
+   }
+  </script>
+
+  <div id='coins' style='width: 460px; height: 400px;'></div>
+
+Баланс BIP: $sumbip<br>Делегировано BIP: $json 
+</div></div></div>
+
+<div class='explorer_block'>
+<div class='explorer_block_header'><center>GIFTCAT</center></div>
+<div class='explorer_block_content'>
 Эмиссия - ". pow(10,9)*2 . "<br>
 Делегировано - ".pow(10,9)."<br>
 В системе - $GIFTCAT<br>
@@ -82,9 +174,98 @@ GIFTCAT<br>
 Резерв BIP - $sumbip<br>
 Резерв в $ - $dollar<br>
 <br>
-";
-$priceDollar = $dollar/((pow(10,9)*2)-pow(10,9)-$freefloat)*100*500;
-echo "
 Цена монеты в $ - ".number_format($priceDollar,6, '.', '')."<br>
 Цена монеты в BIP - ".number_format($priceDollar/$price,6, '.', '')."<br>
+
+</div></div></div>
+<div class='explorer_block' style='width: 100%;'>
+<div class='explorer_block_header'><center>Dynamics of GIFTCAT price changes</center></div>
+<div class='explorer_block_content' style='overflow: auto;'>
 ";
+
+echo '
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+<style>
+.highcharts-figure, .highcharts-data-table table {
+  min-width: 360px; 
+  max-width: 800px;
+  margin: 1em auto;
+}
+
+.highcharts-data-table table {
+	font-family: Verdana, sans-serif;
+	border-collapse: collapse;
+	border: 1px solid #EBEBEB;
+	margin: 10px auto;
+	text-align: center;
+	width: 100%;
+	max-width: 500px;
+}
+.highcharts-data-table caption {
+  padding: 1em 0;
+  font-size: 1.2em;
+  color: #555;
+}
+.highcharts-data-table th {
+	font-weight: 600;
+  padding: 0.5em;
+}
+.highcharts-data-table td, .highcharts-data-table th, .highcharts-data-table caption {
+  padding: 0.5em;
+}
+.highcharts-data-table thead tr, .highcharts-data-table tr:nth-child(even) {
+  background: #f8f8f8;
+}
+.highcharts-data-table tr:hover {
+  background: #f1f7ff;
+}
+</style>
+
+<figure class="highcharts-figure">
+  <div id="container"></div>
+</figure>
+';
+
+echo "
+<script>
+Highcharts.chart('container', {
+
+  title: {
+    text: 'Dynamics of GIFTCAT price changes'
+  },
+
+  xAxis: {
+    tickInterval: 1,
+    type: 'logarithmic',
+    accessibility: {
+      rangeDescription: 'Range: 1 to 10'
+    }
+  },
+
+  yAxis: {
+    type: 'logarithmic',
+    minorTickInterval: 0.1,
+    accessibility: {
+      rangeDescription: 'Range: 0.1 to 1000'
+    }
+  },
+
+  tooltip: {
+    headerFormat: '<b>{series.name}</b><br />',
+    
+  },
+
+  series: [{
+    data: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+    pointStart: 1
+  }]
+});
+</script>
+
+</div></div></div>
+<div><div>
+";//pointFormat: 'x = {point.x}, y = {point.y}'

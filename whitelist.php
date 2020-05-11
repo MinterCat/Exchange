@@ -73,5 +73,12 @@ $whitelist = array(
 'MINTERWAY',
 'JSONCOIN',
 'REWARD',
-'TRADERS'
+'TRADERS',
+'USDM',
+'ETHM',
+'BTCM',
+'BITMEXX',
+'GOODLY',
+'PING',
+'CLOUDP'
 );
