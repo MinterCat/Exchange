@@ -2,6 +2,15 @@
 include('estimate.php');
 include('whitelist.php');
 
+// $db_giftcat = new GIFTCAT();
+class GIFTCAT extends SQLite3
+{
+    function __construct()
+    {
+        $this->open('giftcat.sqlite');
+    }
+}
+
 $DOCUMENT_ROOT = $_SERVER['DOCUMENT_ROOT'];
 require_once(explode('public_html', $DOCUMENT_ROOT)[0] . 'config/config.php');
 require_once($DOCUMENT_ROOT . '/function.php');
@@ -42,10 +51,10 @@ echo "
 <script type='text/javascript' src='https://mintercat.com/static/js/jquery-3.4.1.min.js'></script>
 <link rel='stylesheet' href='".$site."static/css/normalize.css'>
 
-<div class='cat_content_none'>
+<div class='cat_content_none' float: left;'>
 <div class='explorer_content' style='width: 98%; text-align: left; margin: 0;'>
 
-<div class='explorer_block' style='width: 100%;'>
+<div class='explorer_block' style='width: 100%; float: none;'>
 <div class='explorer_block_header'><center><a href='https://explorer.minter.network/address/Mx836a597ef7e869058ecbcc124fae29cd3e2b4444' target='_blank' style='text-decoration: none; color: black;'>COINS</a></center></div>
 <div class='explorer_block_content' style='overflow: auto;'>
 ";
@@ -120,7 +129,7 @@ foreach ($json as $value => $coins) {
 					echo $coin;
 					echo ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
-					if ($coin == 'GIFTCAT') {$GIFTCAT = $amount;}
+					if ($coin == 'GIFTCAT') {$GIFTCAT_amount = $amount;}
 					echo '<br>';
 				}
 		}
@@ -131,10 +140,18 @@ $data = file_get_contents($url);
 $json = json_decode($data)->meta->additional->total_delegated_bip_value;
 $sumbip += $json;
 $dollar = ($sumbip * $price) + $stabledollar;
-$freefloat = pow(10,9) - $GIFTCAT;
+$freefloat = pow(10,9) - $GIFTCAT_amount;
 $priceDollar = $dollar/((pow(10,9)*2)-pow(10,9)-$freefloat)*100*500;
+$GIFTCAT = number_format($priceDollar,6, '.', '');
+
+$prce = '';
+$db_giftcat = new GIFTCAT();
+$result = $db_giftcat->query('SELECT * FROM (SELECT * FROM "table" ORDER BY id DESC LIMIT 100) t ORDER BY id');
+while ($res = $result->fetchArray(1))
+{$prce .= number_format($res['giftcat'],6, '.', '') . ', ';}
 echo "
 </div></div></div>
+
 <div class='explorer_block' style='float: left;'>
 <div class='explorer_block_header'><center>RESERVE</center></div>
 <div class='explorer_block_content'>
@@ -164,7 +181,7 @@ echo "
 Баланс BIP: $sumbip<br>Делегировано BIP: $json 
 </div></div></div>
 
-<div class='explorer_block'>
+<div class='explorer_block' style='width: 350px; height: 300px; float: none;'>
 <div class='explorer_block_header'><center>GIFTCAT</center></div>
 <div class='explorer_block_content'>
 Эмиссия - ". pow(10,9)*2 . "<br>
@@ -174,28 +191,21 @@ echo "
 Резерв BIP - $sumbip<br>
 Резерв в $ - $dollar<br>
 <br>
-Цена монеты в $ - ".number_format($priceDollar,6, '.', '')."<br>
+Цена монеты в $ - $GIFTCAT<br>
 Цена монеты в BIP - ".number_format($priceDollar/$price,6, '.', '')."<br>
 
 </div></div></div>
-<div class='explorer_block' style='width: 100%;'>
+
+<div class='explorer_block' style='width: 98%; float: none;'>
 <div class='explorer_block_header'><center>Dynamics of GIFTCAT price changes</center></div>
 <div class='explorer_block_content' style='overflow: auto;'>
-";
 
-echo '
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/export-data.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src='https://code.highcharts.com/highcharts.js'></script>
+<script src='https://code.highcharts.com/modules/exporting.js'></script>
+<script src='https://code.highcharts.com/modules/export-data.js'></script>
+<script src='https://code.highcharts.com/modules/accessibility.js'></script>
 
 <style>
-.highcharts-figure, .highcharts-data-table table {
-  min-width: 360px; 
-  max-width: 800px;
-  margin: 1em auto;
-}
-
 .highcharts-data-table table {
 	font-family: Verdana, sans-serif;
 	border-collapse: collapse;
@@ -203,7 +213,6 @@ echo '
 	margin: 10px auto;
 	text-align: center;
 	width: 100%;
-	max-width: 500px;
 }
 .highcharts-data-table caption {
   padding: 1em 0;
@@ -225,12 +234,10 @@ echo '
 }
 </style>
 
-<figure class="highcharts-figure">
-  <div id="container"></div>
+<figure class='highcharts-figure'>
+  <div id='container'></div>
 </figure>
-';
 
-echo "
 <script>
 Highcharts.chart('container', {
 
@@ -242,7 +249,7 @@ Highcharts.chart('container', {
     tickInterval: 1,
     type: 'logarithmic',
     accessibility: {
-      rangeDescription: 'Range: 1 to 10'
+      rangeDescription: 'Range: 1 to 100'
     }
   },
 
@@ -255,12 +262,12 @@ Highcharts.chart('container', {
   },
 
   tooltip: {
-    headerFormat: '<b>{series.name}</b><br />',
+    headerFormat: '<b>GIFTCAT</b><br>',
     
   },
 
   series: [{
-    data: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+    data: [$prce],
     pointStart: 1
   }]
 });
