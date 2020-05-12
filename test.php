@@ -186,7 +186,7 @@ echo "
 <div class='explorer_block_content'>
 Эмиссия - ". pow(10,9)*2 . "<br>
 Делегировано - ".pow(10,9)."<br>
-В системе - $GIFTCAT<br>
+В системе - $GIFTCAT_amount<br>
 Фрифлоат - $freefloat<br>
 Резерв BIP - $sumbip<br>
 Резерв в $ - $dollar<br>
