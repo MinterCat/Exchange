@@ -202,7 +202,7 @@ echo "
 Цена монеты в $ - $GIFTCAT<br>
 Цена монеты в BIP - ".number_format($priceDollar/$price,6, '.', '')."<br>
 </div></div></div>
-<div class='explorer_block' style='width: 98%; float: none;'>
+<div class='explorer_block' style='width: 98%; float: none; height: auto;'>
 <div class='explorer_block_header'><center>Dynamics of GIFTCAT price changes</center></div>
 <div class='explorer_block_content' style='overflow: auto;'>
 <script src='https://code.highcharts.com/highcharts.js'></script>
@@ -210,12 +210,6 @@ echo "
 <script src='https://code.highcharts.com/modules/export-data.js'></script>
 <script src='https://code.highcharts.com/modules/accessibility.js'></script>
 <style>
-.highcharts-figure, .highcharts-data-table table {
-  min-width: 320px; 
-  max-width: 800px;
-  margin: 1em auto;
-}
-
 #container {
   height: 450px;
 }
@@ -296,4 +290,4 @@ title: {
 </script>
 </div></div></div>
 <div><div>
-";//pointFormat: 'x = {point.x}, y = {point.y}'
+";
