@@ -2,7 +2,6 @@
 include('estimate.php');
 include('whitelist.php');
 
-// $db_giftcat = new GIFTCAT();
 class GIFTCAT extends SQLite3
 {
     function __construct()
@@ -80,7 +79,7 @@ foreach ($json as $value => $coins) {
 					echo '<div class="block">
 							<span class="hover">⚛️</span>
 							<span class="hidden">StableCoin</span>';
-					echo $coin . ' - ';
+					echo '<a href="https://t.me/MinterBITBot" target="_blank" style="text-decoration: none; color: black;">' . $coin . '</a> - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
 					echo ' | $'.$amount.'</div>';
 					$stabledollar += $amount;
@@ -91,7 +90,7 @@ foreach ($json as $value => $coins) {
 					echo '<div class="block">
 							<span class="hover">⚛️</span>
 							<span class="hidden">StableCoin by Scryaga</span>';
-					echo $coin . ' - ';
+					echo '<a href="https://t.me/cryptoScryaga" target="_blank" style="text-decoration: none; color: black;">' . $coin . '</a> - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
 					echo ' | $'. $amount / $ROUBLE .'</div>';
 					$stabledollar += $amount / $ROUBLE;
@@ -105,7 +104,7 @@ foreach ($json as $value => $coins) {
 					echo '<a href="https://imho.group" target="_blank" style="text-decoration: none; color: black;">' . $coin . '</a> - ';
 					$amount = number_format($coins->amount,6, '.', '');
 					
-					$BIGMAC_price = json_decode(file_get_contents('https://imho.group/api/bigmac/price.json'))->price;
+					$BIGMAC_price = json_decode(file_get_contents('https://imho.group/api/bigmac/price/'))->price;
 					$BIGMAC = $amount * $BIGMAC_price;
 					echo ' 1 BIGMAC = $ '. $BIGMAC_price .' | $'. $BIGMAC .'</div>';
 					$stabledollar += $BIGMAC;
@@ -157,11 +156,14 @@ $freefloat = pow(10,9) - $GIFTCAT_amount;
 $priceDollar = $dollar/((pow(10,9)*2)-pow(10,9)-$freefloat)*100*500;
 $GIFTCAT = number_format($priceDollar,6, '.', '');
 
-$prce = '';
+$prce = '';//$prce2 = '';
 $db_giftcat = new GIFTCAT();
 $result = $db_giftcat->query('SELECT * FROM (SELECT * FROM "table" ORDER BY id DESC LIMIT 100) t ORDER BY id');
 while ($res = $result->fetchArray(1))
-{$prce .= number_format($res['giftcat'],6, '.', '') . ', ';}
+{
+	$prce .= number_format($res['giftcat'],6, '.', '') . ', ';
+	//$prce2 .= number_format($res['mintercat'],6, '.', '') . ', ';
+}
 echo "
 </div></div></div>
 <div class='explorer_block' style='float: left;'>
@@ -202,18 +204,15 @@ echo "
 Цена монеты в $ - $GIFTCAT<br>
 Цена монеты в BIP - ".number_format($priceDollar/$price,6, '.', '')."<br>
 </div></div></div>
-<div class='explorer_block' style='width: 98%; float: none; height: auto;'>
+<div class='explorer_block' style='width: 98%; float: none;'>
 <div class='explorer_block_header'><center>Dynamics of GIFTCAT price changes</center></div>
 <div class='explorer_block_content' style='overflow: auto;'>
 <script src='https://code.highcharts.com/highcharts.js'></script>
+<script src='https://code.highcharts.com/modules/data.js'></script>
 <script src='https://code.highcharts.com/modules/exporting.js'></script>
 <script src='https://code.highcharts.com/modules/export-data.js'></script>
 <script src='https://code.highcharts.com/modules/accessibility.js'></script>
 <style>
-#container {
-  height: 450px;
-}
-
 .highcharts-data-table table {
 	font-family: Verdana, sans-serif;
 	border-collapse: collapse;
@@ -247,45 +246,70 @@ echo "
 </figure>
 <script>
 Highcharts.chart('container', {
-  title: {
-    text: 'Dynamics of GIFTCAT price changes'
-  },
-
-subtitle: {
-    text: 'For the last 500 minutes'
-  },
-
- 
-
-xAxis: {
-    tickInterval: 1,
-   
-    accessibility: {
-      rangeDescription: 'Range: 1 to 100'
-    }
-  },
-  yAxis: {
-    type: 'logarithmic',
-    minorTickInterval: 0.1,
-    accessibility: {
-      rangeDescription: 'Range: 1 to 100'
+      chart: {
+        zoomType: 'x'
+      },
+      title: {
+        text: 'Dynamics of GIFTCAT price changes'
+      },
+      subtitle: {
+        text: document.ontouchstart === undefined ?
+          'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+      },
+      xAxis: {
+		tickInterval: 1,
+		accessibility: {
+			rangeDescription: 'Range: 1 to 100'
+		},
+      },
+      yAxis: {
+		type: 'logarithmic',
+		minorTickInterval: 0.1,
+		accessibility: {
+		rangeDescription: 'Range: 1 to 100'
     },
-
-title: {
-      text: 'Price dynamics'
-    }
-
-  },
-  tooltip: {
-    headerFormat: '<b>GIFTCAT</b><br>',
-
+        title: {
+          text: 'Price dynamics'
+        }
+      },
+      legend: {
+        enabled: false
+      },
+      plotOptions: {
+        area: {
+          fillColor: {
+            linearGradient: {
+              x1: 0,
+              y1: 0,
+              x2: 0,
+              y2: 1
+            },
+            stops: [
+              [0, Highcharts.getOptions().colors[0]],
+              [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+            ]
+          },
+          marker: {
+            radius: 2
+          },
+          lineWidth: 1,
+          states: {
+            hover: {
+              lineWidth: 1
+            }
+          },
+          threshold: null
+        }
+      },
+tooltip: {
+	headerFormat: '<b>GIFTCAT</b><br>',
     pointFormat: '$ {point.y}'
   },
-  series: [{
-    name: 'GIFTCAT',
-    data: [$prce],
-    pointStart: 1
-  }]
+      series: [{
+        type: 'area',
+        name: 'GIFTCAT',
+        data: [$prce],
+      }]
 });
 </script>
 </div></div></div>
