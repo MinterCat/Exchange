@@ -80,5 +80,8 @@ $whitelist = array(
 'BITMEXX',
 'GOODLY',
 'PING',
-'CLOUDP'
-);
+'CLOUDP',
+'CUSTOMPRO',
+'MTGCOIN',
+'PRIVATE'
+);//'BIGMAC'
