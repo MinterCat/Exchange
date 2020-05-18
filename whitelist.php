@@ -83,5 +83,13 @@ $whitelist = array(
 'CLOUDP',
 'CUSTOMPRO',
 'MTGCOIN',
-'PRIVATE'
-);//'BIGMAC'
+'PRIVATE',
+'BIGMAC',
+'DROPBOT',
+'INFLOW',
+'ACCELER',
+'ROBOT',
+'AMBASSADOR',
+'FRANKLIN',
+'BTC'
+);
