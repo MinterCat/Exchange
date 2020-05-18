@@ -34,7 +34,7 @@ $ROUBLE = $daily_json->Valute->USD->Value;
 echo '<br>$1 = ' . $ROUBLE . ' RUB</a></p></div>';
 
 $url = 'https://explorer-api.minter.network/api/v1/addresses/' . $address . '/delegations';
-$delegations = json_decode(file_get_contents($url))->data;
+$delegations = json_decode(file_get_contents($url));
 
 echo "
 <meta charset='utf-8'>
@@ -56,7 +56,7 @@ echo "
 <div class='explorer_block_content' style='overflow: auto;'>
 ";
 $data = [];
-foreach ($delegations as $value => $coins) {
+foreach ($delegations->data as $value => $coins) {
 $coin = $coins->coin;
 $value = $coins->value;
 $bip_value = $coins->bip_value;
@@ -102,11 +102,11 @@ foreach ($json as $value => $coins) {
 							<span class="hover">⚛️</span>
 							<span class="hidden">StableCoin by imho.group</span>';
 					echo '<a href="https://imho.group" target="_blank" style="text-decoration: none; color: black;">' . $coin . '</a> - ';
-					$amount = number_format($coins->amount,6, '.', '');
+					echo $amount = number_format($coins->amount,6, '.', '');
 					
 					$BIGMAC_price = json_decode(file_get_contents('https://imho.group/api/bigmac/price/'))->price;
 					$BIGMAC = $amount * $BIGMAC_price;
-					echo ' 1 BIGMAC = $ '. $BIGMAC_price .' | $'. $BIGMAC .'</div>';
+					echo ' | 1 BIGMAC = $ '. $BIGMAC_price .' | $'. $BIGMAC .'</div>';
 					$stabledollar += $BIGMAC;
 					$push .= "['".$coin."', ".$BIGMAC."],";
 				}
@@ -115,8 +115,8 @@ foreach ($json as $value => $coins) {
 					echo '✅';
 					echo $coin . ' - ';
 					echo $amount = number_format($coins->amount,6, '.', '');
-					$estimate = estimate($coin);
-					$sum = $estimate*$amount;
+					$estimate = number_format(estimate($coin),6, '.', '');
+					$sum = number_format($estimate*$amount,6, '.', '');
 					echo ' | Estimate: ' . $estimate .' BIP | ' . $sum .' BIP<br>';
 					$sumbip += $sum;
 					$push .= "['".$coin."', ".$sum * $price."],";
@@ -146,9 +146,7 @@ foreach ($json as $value => $coins) {
 		}
 }
 $Uncertain = 0;
-$url = 'https://explorer-api.minter.network/api/v1/addresses/' . $address . '/delegations';
-$data = file_get_contents($url);
-$json = json_decode($data)->meta->additional->total_delegated_bip_value;
+$json = $delegations->meta->additional->total_delegated_bip_value;
 $sumbalance = $sumbip;
 $sumbip += $json;
 $dollar = ($sumbip * $price) + $stabledollar;
@@ -180,7 +178,7 @@ echo "
 	 ['Uncertain',    $Uncertain]
     ]);
     var options = {
-     title: 'Coins',
+     title: 'Coins ($)',
      is3D: true,
      pieResidueSliceLabel: 'Uncertain'
     };
