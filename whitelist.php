@@ -91,5 +91,6 @@ $whitelist = array(
 'ROBOT',
 'AMBASSADOR',
 'FRANKLIN',
-'BTC'
+'BTC',
+'POP'
 );
